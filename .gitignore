@@ -1,38 +1,101 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Dependencies
-node_modules
+# ==========================================
+# co-panion Monorepo Global .gitignore
+# ==========================================
+
+# 1. Dependencies
+node_modules/
 .pnp
-.pnp.js
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# Local env files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# 2. Build Outputs & Caches (루트 및 모든 하위 앱/패키지에 적용)
+**/dist/
+**/build/
+**/out/
+**/.next/
+**/.turbo/
+**/.vercel/
+*.tsbuildinfo
+next-env.d.ts
 
-# Testing
-coverage
+# 3. Environment Variables (보안)
+# 모든 종류의 env 파일을 차단하되, 템플릿 파일은 깃허브에 공유되도록 허용합니다.
+**/.env*
+!**/.env.example
+!**/.env.template
 
-# Turbo
-.turbo
+# 4. Prisma Generated Client
+# (로컬 및 CI 환경에서 generate 되므로 절대 형상관리에 포함하지 않습니다)
+libs/database/src/generated/
 
-# Vercel
-.vercel
+# 5. Testing & Runtime
+**/coverage/
+**/.nyc_output/
+**/pids/
+*.pid
+*.seed
+*.pid.lock
+.temp/
+.tmp/
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-# Build Outputs
-.next/
-out/
-build
-dist
-
-
-# Debug
+# 6. Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Misc
+# 7. OS & Misc
 .DS_Store
+Thumbs.db
 *.pem
+
+# 8. IDEs and Editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+
+# 9. Package Manager Lockfiles (pnpm 강제화)
+# ==========================================
+# package.json에서 pnpm을 강제하셨더라도, 실수로 npm/yarn 명령어를 실행했을 때
+# 불필요한 락파일이 깃허브에 올라가는 것을 원천 차단합니다. (pnpm-lock.yaml만 허용)
+package-lock.json
+yarn.lock
+
+
+# 10. Compiler & Linter Caches (캐시 충돌 방지)
+# ==========================================
+# Next.js와 NestJS에서 사용하는 SWC 컴파일러 캐시와 ESLint 캐시를 차단하여 
+# 로컬 환경 간의 캐시 충돌을 방지합니다.
+.eslintcache
+.stylelintcache
+**/.swc/
+
+
+# 11. Local Database Files (보안 및 용량 통제)
+# ==========================================
+# Prisma를 활용한 로컬 테스트나 시드(Seed) 과정에서 임시로 생성될 수 있는 
+# 로컬 DB 파일이 형상 관리에 포함되는 것을 방어합니다.
+*.db
+*.db-journal
+*.sqlite
+

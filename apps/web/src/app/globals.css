@@ -1,0 +1,16 @@
+/* 기존 Tailwind의 h-full, min-h-full 역할 대체 */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  /* 기존 font-sans 및 antialiased 역할 대체 */
+  font-family: var(--font-geist-sans), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
