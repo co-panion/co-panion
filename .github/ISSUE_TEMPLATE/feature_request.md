@@ -2,7 +2,7 @@
 name: "🚀 기능 개발 (Feature Request)"
 about: 새로운 기능 제안 및 스캐폴딩을 위한 템플릿입니다.
 title: "feat(scope): [작업할 기능명 기재]"
-labels: ["enhancement", "feature"]
+labels: ["feature"]
 assignees: ""
 ---
 

@@ -2,7 +2,7 @@
 name: "🏗 아키텍처 및 기반 작업 (Architecture / Enabler)"
 about: 대규모 데이터베이스 스키마 개편, 코어 모듈 리팩토링 등 파괴적 변경을 동반하는 기술적 기반 작업을 위한 템플릿입니다.
 title: "refactor(core): [작업 내용 요약]"
-labels: ["architecture", "enabler"]
+labels: ["architecture"]
 assignees: ""
 ---
 
