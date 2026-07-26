@@ -3,7 +3,6 @@
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -11,28 +10,76 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")                                              // 복구됨 (Prisma v6 필수)
+  url      = env("DATABASE_URL") // 복구됨 (Prisma v6 필수)
 }
 
-// ----------------------------------------------------
-// [Enums] (작성자 원본 유지)
-// ----------------------------------------------------
-enum Gender { 
-  MALE 
-  FEMALE 
-  UNKNOWN 
+// ==========================================
+// [1] Enums (공통 상태 및 도메인)
+// ==========================================
+enum SocialProvider {
+  KAKAO
+  NAVER
+  GOOGLE
+  APPLE
 }
 
-enum AnimalStatus { 
+enum AccountStatus {
+  ACTIVE
+  LOCKED
+  DORMANT
+}
+
+enum PartyType {
+  INDIVIDUAL
+  BUSINESS
+  TEAM
+}
+
+enum PartyStatus {
+  ACTIVE
+  SUSPENDED
+  WITHDRAWN
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  MANAGER
+  MEMBER
+  GUEST
+}
+
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  UNKNOWN
+}
+
+enum AnimalStatus {
+  RESCUED
+  REUNITED
   PROTECTED
   AVAILABLE
+  COUNSELING
   ADOPTED
-  REUNITED
   DECEASED
-  EUTHANIZED 
+  EUTHANIZED
 }
 
-enum AdoptionStatus { 
+enum AdoptionApplicationStatus {
   PENDING
   COUNSELING
   INTERVIEW
@@ -41,271 +88,495 @@ enum AdoptionStatus {
   FINAL_REVIEW
   APPROVED
   REJECTED
-  CANCELED 
+  CANCELED
 }
 
-enum PetExperience { 
+enum TargetType {
+  PARTY_PROFILE
+  SHELTER_BANNER
+  ANIMAL
+  RESCUE_POST
+  ADOPTION_PROCESS
+  POST
+  MEDIA
+}
+
+// [입양 설문 Enum] (수치형 변환 항목 제외)
+enum PetExperience {
   NONE
   PAST
-  CURRENT 
+  CURRENT
 }
 
-enum PetExperiencePeriod { 
-  LESS_THAN_1_YEAR
-  ONE_TO_THREE_YEARS
-  THREE_TO_FIVE_YEARS
-  OVER_FIVE_YEARS 
-}
-
-enum ResidenceType { 
+enum ResidenceType {
   APARTMENT
   VILLA
   DETACHED_HOUSE
   OFFICETEL
-  DORMITORY 
+  DORMITORY
 }
 
-enum PetPolicy { 
+enum PetPolicy {
   ALLOWED
   NOT_ALLOWED
   NEED_CONFIRMATION
 }
 
-enum FamilySize { 
-  ONE
-  TWO
-  THREE
-  FOUR_OR_MORE 
+// ==========================================
+// [2] Module: Auth 
+// ==========================================
+model IntegratedAuthAccount {
+  accountId     String        @id @default(uuid()) @map("account_id") @db.Uuid
+  partyId       String        @map("party_id") @db.Uuid
+  username      String        @unique @db.VarChar(100)
+  passwordHash  String?       @map("password_hash") @db.VarChar(255)
+  accountStatus AccountStatus @default(ACTIVE) @map("account_status")
+
+  lastLoginTime DateTime? @map("last_login_time") @db.Timestamptz
+  registerTime  DateTime? @default(now()) @map("register_time") @db.Timestamptz
+  updateTime    DateTime? @updatedAt @map("update_time") @db.Timestamptz
+  deleteTime    DateTime? @map("delete_time") @db.Timestamptz
+
+  partyBase  PartyBase         @relation(fields: [partyId], references: [partyId], onDelete: Cascade)
+  socialAuth SocialAuthDetail?
+
+  @@index([deleteTime])
+  @@map("integrated_auth_account")
 }
 
-enum ChildrenAgeGroup { 
-  NONE
-  UNDER_SEVEN
-  SEVEN_OR_OLDER 
+model SocialAuthDetail {
+  socialId   String         @id @default(uuid()) @map("social_id") @db.Uuid
+  accountId  String         @unique @map("account_id") @db.Uuid
+  provider   SocialProvider @map("provider")
+  providerId String         @map("provider_id") @db.VarChar(255)
+
+  registerTime DateTime? @default(now()) @map("register_time") @db.Timestamptz
+  updateTime   DateTime? @updatedAt @map("update_time") @db.Timestamptz
+
+  account IntegratedAuthAccount @relation(fields: [accountId], references: [accountId], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@map("social_auth_detail")
 }
 
-enum UserStatus { 
-  ACTIVE
-  INACTIVE
-  SUSPENDED
-  WITHDRAWN
+// ==========================================
+// [3] Module: Parties (주체 코어)
+// ==========================================
+model PartyBase {
+  partyId    String      @id @default(uuid()) @map("party_id") @db.Uuid
+  partyType  PartyType   @map("party_type")
+  statusCode PartyStatus @default(ACTIVE) @map("status_code")
+
+  registerTime DateTime? @default(now()) @map("register_time") @db.Timestamptz
+  updateTime   DateTime? @updatedAt @map("update_time") @db.Timestamptz
+  deleteTime   DateTime? @map("delete_time") @db.Timestamptz
+
+  individual PartyIndividual?
+  business   PartyBusiness?
+  team       PartyTeam?
+  profile    PartyProfile?
+  trait      UserAnalyticsTrait?
+
+  accounts  IntegratedAuthAccount[]
+  eventLogs UserEventLog[]
+  contacts  PartyContactInfo[]
+
+  memberships  PartyMembership[] @relation("MemberToGroup")
+  groupMembers PartyMembership[] @relation("GroupToMember")
+
+  shelters       Shelter[]         @relation("BusinessShelters")
+  managedAnimals Animal[]          @relation("AnimalManager")
+  rescuePosts    RescuePost[]
+  adoptions      AdoptionProcess[]
+  posts          Post[]
+  comments       Comment[]
+
+  @@index([deleteTime])
+  @@map("party_base")
 }
 
-enum Role { 
-  USER 
-  SHELTER 
-  ADMIN 
+model PartyContactInfo {
+  contactId     String  @id @default(uuid()) @map("contact_id") @db.Uuid
+  partyId       String  @map("party_id") @db.Uuid
+  email         String? @db.VarChar(255)
+  phoneNumber   String? @map("phone_number") @db.VarChar(50)
+  extraContacts Json?   @map("extra_contacts") @db.JsonB
+  isPrimary     Boolean @default(false) @map("is_primary")
+
+  registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
+  updateTime   DateTime  @updatedAt @map("update_time") @db.Timestamptz
+  deleteTime   DateTime? @map("delete_time") @db.Timestamptz
+
+  party PartyBase @relation(fields: [partyId], references: [partyId], onDelete: Cascade)
+
+  @@index([email])
+  @@index([phoneNumber])
+  @@map("party_contact_info")
 }
 
-// ----------------------------------------------------
-// [Entities]
-// ----------------------------------------------------
+model PartyIndividual {
+  partyId         String   @id @map("party_id") @db.Uuid
+  name            String   @db.VarChar(100)
+  di              String   @unique @db.VarChar(64)
+  ciUpdateTime    DateTime @map("ci_update_time") @db.Timestamptz
+  birthDateString String   @map("birth_date") @db.Char(8)
+  gender          String   @db.Char(1)
 
-model User {
-  id         String     @id @default(uuid()) @db.Uuid
-  shelterId  String?    @db.Uuid
-  email      String     @unique @db.VarChar(255)
-  password   String     @db.VarChar(255)
-  nickname   String     @db.VarChar(20)
-  role       Role
-  imgProfile String     @db.VarChar(100)
-  status     UserStatus @default(ACTIVE)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  partyBase PartyBase @relation(fields: [partyId], references: [partyId], onDelete: Cascade)
 
-  shelter    Shelter?   @relation(fields: [shelterId], references: [id])        // [수정] Shelter 관계 명시
-
-  agreements UserAgreement[]
-  adoptions  Adoption[]
-  inquiries  Inquiry[]
-  petPosts   PetPost[]                                                          // [수정] 역방향 관계 명시
+  @@map("party_individual")
 }
 
+model PartyBusiness {
+  partyId            String             @id @map("party_id") @db.Uuid
+  businessName       String             @map("business_name") @db.VarChar(150)
+  countryCode        String             @default("KR") @map("country_code") @db.Char(2)
+  registrationNumber String             @unique @map("registration_number") @db.VarChar(50)
+  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+  bcode              String?            @db.Char(10)
+
+  partyBase   PartyBase            @relation(fields: [partyId], references: [partyId], onDelete: Cascade)
+  koreaDetail BusinessKoreaDetail?
+
+  @@index([bcode])
+  @@map("party_business")
+}
+
+model PartyTeam {
+  partyId  String @id @map("party_id") @db.Uuid
+  teamName String @map("team_name") @db.VarChar(100)
+
+  partyBase PartyBase @relation(fields: [partyId], references: [partyId], onDelete: Cascade)
+
+  @@map("party_team")
+}
+
+model BusinessKoreaDetail {
+  partyId          String    @id @map("party_id") @db.Uuid
+  ntsStatusCode    String?   @map("nts_status_code") @db.VarChar(20)
+  fscIndustryCode  String?   @map("fsc_industry_code") @db.VarChar(20)
+  lastVerifiedTime DateTime? @map("last_verified_time") @db.Timestamptz
+
+  business PartyBusiness @relation(fields: [partyId], references: [partyId], onDelete: Cascade)
+
+  @@map("business_korea_detail")
+}
+
+model PartyProfile {
+  profileId   String @id @default(uuid()) @map("profile_id") @db.Uuid
+  partyId     String @unique @map("party_id") @db.Uuid
+  profileData Json?  @map("profile_data") @db.JsonB
+
+  registerTime DateTime? @default(now()) @map("register_time") @db.Timestamptz
+  updateTime   DateTime? @updatedAt @map("update_time") @db.Timestamptz
+  deleteTime   DateTime? @map("delete_time") @db.Timestamptz
+
+  partyBase PartyBase @relation(fields: [partyId], references: [partyId], onDelete: Cascade)
+
+  @@map("party_profile")
+}
+
+model PartyMembership {
+  membershipId String           @id @default(uuid()) @map("membership_id") @db.Uuid
+  memberId     String           @map("member_id") @db.Uuid
+  groupId      String           @map("group_id") @db.Uuid
+  role         MembershipRole   @default(MEMBER) @map("role")
+  status       MembershipStatus @default(ACTIVE) @map("status")
+  joinedTime   DateTime         @default(now()) @map("joined_time") @db.Timestamptz
+
+  member PartyBase @relation("MemberToGroup", fields: [memberId], references: [partyId], onDelete: Cascade)
+  group  PartyBase @relation("GroupToMember", fields: [groupId], references: [partyId], onDelete: Cascade)
+
+  @@unique([memberId, groupId])
+  @@index([groupId])
+  @@map("party_membership")
+}
+
+// ==========================================
+// [4] Module: Analytics & Audit
+// ==========================================
+model UserEventLog {
+  eventId         String   @id @default(uuid()) @map("event_id") @db.Uuid
+  partyId         String   @map("party_id") @db.Uuid
+  eventCategory   String   @map("event_category") @db.VarChar(50)
+  eventName       String   @map("event_name") @db.VarChar(50)
+  eventProperties Json     @map("event_properties") @db.JsonB
+  eventTime       DateTime @default(now()) @map("event_time") @db.Timestamptz
+
+  partyBase PartyBase @relation(fields: [partyId], references: [partyId])
+
+  @@index([partyId, eventTime])
+  @@index([eventCategory, eventName])
+  @@map("user_event_log")
+}
+
+model UserAnalyticsTrait {
+  partyId            String   @id @map("party_id") @db.Uuid
+  calculatedTraits   Json     @map("calculated_traits") @db.JsonB
+  lastCalculatedTime DateTime @default(now()) @map("last_calculated_time") @db.Timestamptz
+
+  partyBase PartyBase @relation(fields: [partyId], references: [partyId], onDelete: Cascade)
+
+  @@map("user_analytics_trait")
+}
+
+model AccountAuditLog {
+  logId          String  @id @default(uuid()) @map("log_id") @db.Uuid
+  accountId      String  @map("account_id") @db.Uuid
+  encryptedEmail String  @map("encrypted_email") @db.VarChar(255)
+  reasonCode     String  @map("reason_code") @db.Char(2)
+  reasonMetadata Json?   @map("reason_metadata") @db.JsonB
+  clientIp       String? @map("client_ip") @db.VarChar(50)
+
+  withdrawnTime DateTime @default(now()) @map("withdrawn_time") @db.Timestamptz
+  expireTime    DateTime @map("expire_time") @db.Timestamptz
+
+  @@index([accountId])
+  @@index([expireTime])
+  @@map("account_audit_log")
+}
+
+model ExternalApiCallLog {
+  logId           String  @id @default(uuid()) @map("log_id") @db.Uuid
+  apiCategory     String  @map("api_category") @db.Char(4)
+  apiProvider     String  @map("api_provider") @db.Char(4)
+  endpointUrl     String  @map("endpoint_url") @db.VarChar(255)
+  referenceId     String? @map("reference_id") @db.Uuid
+  referenceType   String? @map("reference_type") @db.VarChar(50)
+  requestPayload  Json?   @map("request_payload") @db.JsonB
+  responsePayload Json?   @map("response_payload") @db.JsonB
+  httpStatusCode  Int?    @map("http_status_code")
+  durationMs      Int?    @map("duration_ms")
+  isSuccess       Boolean @map("is_success")
+
+  registerTime DateTime @default(now()) @map("register_time") @db.Timestamptz
+
+  @@index([apiCategory, apiProvider])
+  @@index([referenceId, referenceType])
+  @@map("external_api_call_log")
+}
+
+// ==========================================
+// [5] Module: Shelter
+// ==========================================
 model Shelter {
-  id             String   @id @default(uuid()) @db.Uuid
-  name           String   @db.VarChar(100)
-  address        String   @db.VarChar(255)
-  addressDetail  String?  @db.VarChar(255)
-  phone          String   @db.VarChar(20)
-  operatingHours String   @db.VarChar(100)
-  description    String   @db.VarChar(500)
-  imgBanner      String   @db.VarChar(100)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id             String  @id @default(uuid()) @map("id") @db.Uuid
+  businessId     String  @map("business_id") @db.Uuid
+  name           String  @map("name") @db.VarChar(100)
+  address        String  @map("address") @db.VarChar(255)
+  addressDetail  String? @map("address_detail") @db.VarChar(255)
+  phone          String  @map("phone") @db.VarChar(20)
+  operatingHours String  @map("operating_hours") @db.VarChar(100)
+  description    String  @map("description") @db.VarChar(500)
 
-  users          User[]                                                           // [수정] 역방향 관계 명시
-  images         ShelterImage[]
-  animals        Animal[]
+  registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
+  updateTime   DateTime  @updatedAt @map("update_time") @db.Timestamptz
+  deleteTime   DateTime? @map("delete_time") @db.Timestamptz
+
+  business PartyBase @relation("BusinessShelters", fields: [businessId], references: [partyId], onDelete: Cascade)
+  animals  Animal[]  @relation("ShelterLocation")
+
+  @@index([businessId, deleteTime])
+  @@map("shelter")
 }
 
-model ShelterImage {
-  id        String  @id @default(uuid()) @db.Uuid
-  shelterId String  @db.Uuid
-  img       String  @db.VarChar(100)
-  
-  shelter   Shelter @relation(fields: [shelterId], references: [id])
-}
-
+// ==========================================
+// [6] Module: Animal & Transactions
+// ==========================================
 model Animal {
-  id             Int          @id @default(autoincrement())
-  shelterId      String       @db.Uuid
-  name           String       @db.VarChar(50)
-  
-  speciesId      Int          @db.SmallInt                                        // [수정] 외래키 필드명 명확화 (Id 접미사 추가)
-  breedId        Int          @db.SmallInt
-  
-  gender         Gender
-  isNeutered     Boolean
-  age            Int          @db.SmallInt
-  isEstimatedAge Boolean
-  animalStatus   AnimalStatus @default(PROTECTED)
-  weight         Decimal      @db.Decimal(5, 2)
-  imgThumbnail   String       @db.VarChar(100)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id             Int     @id @default(autoincrement()) @map("id")
+  managerPartyId String  @map("manager_party_id") @db.Uuid
+  shelterId      String? @map("shelter_id") @db.Uuid
 
-  shelter        Shelter      @relation(fields: [shelterId], references: [id])
-  
-  
-  species        AnimalSpecies @relation(fields: [speciesId], references: [id])  // [수정] 종/품종 관계 명시
-  breed          AnimalBreed   @relation(fields: [breedId], references: [id])
-  
-  images         AnimalImage[]
-  detail         AnimalDetail?
+  speciesId      Int          @map("species_id") @db.SmallInt
+  breedId        Int          @map("breed_id") @db.SmallInt
+  name           String       @map("name") @db.VarChar(50)
+  gender         Gender       @map("gender")
+  isNeutered     Boolean      @map("is_neutered")
+  age            Int?         @map("age") @db.SmallInt
+  isEstimatedAge Boolean      @map("is_estimated_age")
+  weight         Decimal      @map("weight") @db.Decimal(5, 2)
+  animalStatus   AnimalStatus @default(RESCUED) @map("animal_status")
+
+  registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
+  updateTime   DateTime  @updatedAt @map("update_time") @db.Timestamptz
+  deleteTime   DateTime? @map("delete_time") @db.Timestamptz
+
+  managerParty PartyBase     @relation("AnimalManager", fields: [managerPartyId], references: [partyId], onDelete: Restrict)
+  shelter      Shelter?      @relation("ShelterLocation", fields: [shelterId], references: [id], onDelete: SetNull)
+  species      AnimalSpecies @relation(fields: [speciesId], references: [id])
+  breed        AnimalBreed   @relation(fields: [breedId], references: [id])
+
+  rescuePosts RescuePost[]
+  adoptions   AdoptionProcess[]
+
+  @@index([animalStatus, deleteTime])
+  @@index([managerPartyId])
+  @@map("animal")
 }
 
 model AnimalSpecies {
-  id      Int      @id @default(autoincrement()) @db.SmallInt
-  name    String   @db.VarChar(30)
-  
-  animals Animal[]                                                              // [수정] 역방향 관계 명시
+  id      Int           @id @default(autoincrement()) @map("id") @db.SmallInt
+  name    String        @map("name") @db.VarChar(30)
+  breeds  AnimalBreed[]
+  animals Animal[]
+
+  @@map("animal_species")
 }
 
 model AnimalBreed {
-  id        Int      @id @default(autoincrement()) @db.SmallInt
-  
-  speciesId Int      @db.SmallInt
-  name      String   @db.VarChar(30)
-  
-  species   AnimalSpecies @relation(fields: [speciesId], references: [id])      // [수정] 종목 관계 명시를 위해 필드명 변경 및 관계 추가
-  animals   Animal[]                                                            // [수정] 역방향 관계 명시
+  id        Int           @id @default(autoincrement()) @map("id") @db.SmallInt
+  speciesId Int           @map("species_id") @db.SmallInt
+  name      String        @map("name") @db.VarChar(30)
+  species   AnimalSpecies @relation(fields: [speciesId], references: [id], onDelete: Cascade)
+  animals   Animal[]
+
+  @@index([speciesId])
+  @@map("animal_breed")
 }
 
-model AnimalDetail {
-  id              String   @id @default(uuid()) @db.Uuid                        // [수정] autoincrement 제거 (매우 중요)
-  animalId        Int      @unique
-  noticeStartDate DateTime @db.Date
-  noticeEndDate   DateTime @db.Date
-  foundLocation   String   @db.VarChar(50)
-  specialNotes    String   @db.VarChar(100)
-  description     String   @db.VarChar(500)
-  healthStatus    String   @db.VarChar(500)
-  updatedAt       DateTime @updatedAt
-  
-  animal          Animal   @relation(fields: [animalId], references: [id])
+model RescuePost {
+  id            String   @id @default(uuid()) @map("id") @db.Uuid
+  animalId      Int      @map("animal_id")
+  authorPartyId String   @map("author_party_id") @db.Uuid
+  title         String   @map("title") @db.VarChar(100)
+  foundLocation String   @map("found_location") @db.VarChar(255)
+  foundTime     DateTime @map("found_time") @db.Timestamptz
+  description   String   @map("description") @db.Text
+
+  registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
+  updateTime   DateTime  @updatedAt @map("update_time") @db.Timestamptz
+  deleteTime   DateTime? @map("delete_time") @db.Timestamptz
+
+  animal      Animal    @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  authorParty PartyBase @relation(fields: [authorPartyId], references: [partyId], onDelete: Cascade)
+
+  @@index([animalId, deleteTime])
+  @@map("rescue_post")
 }
 
-model AnimalImage {
-  id       String @id @default(uuid()) @db.Uuid
-  animalId Int
-  img      String @db.VarChar(100)
-  
-  animal   Animal @relation(fields: [animalId], references: [id])
-}
+model AdoptionProcess {
+  id               String                    @id @default(uuid()) @map("id") @db.Uuid
+  animalId         Int                       @map("animal_id")
+  applicantPartyId String                    @map("applicant_party_id") @db.Uuid
+  status           AdoptionApplicationStatus @default(PENDING) @map("status")
+  memo             String?                   @map("memo") @db.Text
 
-model Adoption {
-  id             String         @id @default(uuid()) @db.Uuid
-  userId         String         @db.Uuid
-  animalId       Int
-  adoptionStatus AdoptionStatus
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
+  updateTime   DateTime  @updatedAt @map("update_time") @db.Timestamptz
+  deleteTime   DateTime? @map("delete_time") @db.Timestamptz
 
-  user           User           @relation(fields: [userId], references: [id])
+  animal         Animal          @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  applicantParty PartyBase       @relation(fields: [applicantPartyId], references: [partyId], onDelete: Cascade)
   detail         AdoptionDetail?
-  agreements     AdoptionAgreement[]
+
+  @@index([animalId, status, deleteTime])
+  @@map("adoption_process")
 }
 
 model AdoptionDetail {
-  id                  String               @id @default(uuid()) @db.Uuid
-  adoptionId          String               @unique @db.Uuid
-  userName            String               @db.VarChar(30)
-  email               String               @db.VarChar(255)
-  phone               String               @db.VarChar(20)
-  address             String               @db.VarChar(255)
-  addressDetail       String?              @db.VarChar(255)
-  petExperience       PetExperience
-  petDescription      String?              @db.VarChar(100)
-  petExperiencePeriod PetExperiencePeriod?
-  residenceType       ResidenceType
-  petPolicy           PetPolicy
-  familySize          FamilySize
-  childrenAgeGroup    ChildrenAgeGroup
-  isFamilyConsented   Boolean              @default(false)
-  purpose             String               @db.VarChar(100)
-  canVaccinate        Boolean
-  canProvideMedical   Boolean
-  canProvideExercise  Boolean
-  isLifelongCommit    Boolean
-  note                String               @db.VarChar(500)
-  updatedAt           DateTime             @updatedAt
+  id                String @id @default(uuid()) @map("id") @db.Uuid
+  adoptionProcessId String @unique @map("adoption_process_id") @db.Uuid
+  applicantName     String @map("applicant_name") @db.VarChar(30)
 
-  adoption            Adoption             @relation(fields: [adoptionId], references: [id])
+  familySize       Int  @map("family_size") @db.SmallInt
+  youngestChildAge Int? @map("youngest_child_age") @db.SmallInt
+
+  petExperience       PetExperience @map("pet_experience")
+  petExperienceMonths Int?          @map("pet_experience_months") @db.SmallInt
+  residenceType       ResidenceType @map("residence_type")
+  petPolicy           PetPolicy     @map("pet_policy")
+  isFamilyConsented   Boolean       @default(false) @map("is_family_consented")
+
+  updateTime DateTime @updatedAt @map("update_time") @db.Timestamptz
+
+  adoptionProcess AdoptionProcess @relation(fields: [adoptionProcessId], references: [id], onDelete: Cascade)
+
+  @@map("adoption_detail")
 }
 
-model Agreement {
-  id      Int    @id @default(autoincrement()) @db.SmallInt
-  title   String @db.VarChar(50)
-  content String @db.Text
+// ==========================================
+// [7] Module: Media, Comments & Tags
+// ==========================================
+model Media {
+  id         String     @id @default(uuid()) @map("id") @db.Uuid
+  targetType TargetType @map("target_type")
+  targetId   String     @map("target_id") @db.Uuid
+  mediaUrl   String     @map("media_url") @db.Text
+  orderSeq   Int        @default(0) @map("order_seq")
+  metadata   Json?      @map("metadata") @db.JsonB
+
+  registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
+  deleteTime   DateTime? @map("delete_time") @db.Timestamptz
+
+  @@index([targetType, targetId, deleteTime])
+  @@map("media")
 }
 
-model UserAgreement {
-  id          String   @id @default(uuid()) @db.Uuid
-  agreementId Int      @db.SmallInt
-  userId      String   @db.Uuid
-  isAgreed    Boolean
-  agreedAt    DateTime @default(now())
+model Post {
+  id       String @id @default(uuid()) @map("id") @db.Uuid
+  authorId String @map("author_id") @db.Uuid
+  title    String @map("title") @db.VarChar(50)
+  content  String @map("content") @db.Text
 
-  user        User     @relation(fields: [userId], references: [id])
+  registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
+  updateTime   DateTime  @updatedAt @map("update_time") @db.Timestamptz
+  deleteTime   DateTime? @map("delete_time") @db.Timestamptz
+
+  author PartyBase @relation(fields: [authorId], references: [partyId], onDelete: Cascade)
+
+  @@index([authorId, deleteTime])
+  @@map("post")
 }
 
-model AdoptionAgreement {
-  id          String   @id @default(uuid()) @db.Uuid
-  agreementId Int      @db.SmallInt
-  adoptionId  String   @db.Uuid
-  isAgreed    Boolean
-  agreedAt    DateTime @default(now())
+// [통합 댓글 시스템 - 1-Depth UX 제한형]
+model Comment {
+  id         String     @id @default(uuid()) @map("id") @db.Uuid
+  authorId   String     @map("author_id") @db.Uuid
+  targetType TargetType @map("target_type")
+  targetId   String     @map("target_id") @db.Uuid
 
-  adoption    Adoption @relation(fields: [adoptionId], references: [id])
+  rootId   String? @map("root_id") @db.Uuid
+  parentId String? @map("parent_id") @db.Uuid
+
+  content String @map("content") @db.Text
+
+  registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
+  updateTime   DateTime  @updatedAt @map("update_time") @db.Timestamptz
+  deleteTime   DateTime? @map("delete_time") @db.Timestamptz
+
+  author PartyBase @relation(fields: [authorId], references: [partyId], onDelete: Cascade)
+
+  root   Comment? @relation("Thread", fields: [rootId], references: [id], onDelete: Cascade)
+  parent Comment? @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+
+  threadReplies Comment[] @relation("Thread")
+  replies       Comment[] @relation("Replies")
+
+  @@index([targetType, targetId, rootId, deleteTime])
+  @@map("comment")
 }
 
-model PetPost {
-  id        Int      @id @default(autoincrement())
-  authorId  String   @db.Uuid
-  title     String   @db.VarChar(50)
-  content   String   @db.VarChar(500)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-  
-  
-  author    User     @relation(fields: [authorId], references: [id])          // [수정] 작성자(User) 관계 명시
-  images    PetPostImage[]
+model Hashtag {
+  id   String @id @default(uuid()) @map("id") @db.Uuid
+  name String @unique @map("name") @db.VarChar(50)
+
+  mappings HashtagMapping[]
+
+  @@map("hashtag")
 }
 
-model PetPostImage {
-  id        String  @id @default(uuid()) @db.Uuid
-  petPostId Int
-  img       String  @db.VarChar(100)
+model HashtagMapping {
+  id         String     @id @default(uuid()) @map("id") @db.Uuid
+  hashtagId  String     @map("hashtag_id") @db.Uuid
+  targetType TargetType @map("target_type")
+  targetId   String     @map("target_id") @db.Uuid
 
-  petPost   PetPost @relation(fields: [petPostId], references: [id])
-}
+  registerTime DateTime @default(now()) @map("register_time") @db.Timestamptz
 
-//TODO 임시 (Test) : 테스트 후 아키텍처 수정 보완
-model Inquiry {
-  id        String  @id @default(uuid()) @db.Uuid
-  userId    String  @db.Uuid
-  title     String  @db.VarChar(200)
-  content   String  @db.Text
-  
-  user      User    @relation(fields: [userId], references: [id])
+  hashtag Hashtag @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
+
+  @@unique([hashtagId, targetType, targetId])
+  @@index([targetType, targetId])
+  @@map("hashtag_mapping")
 }
