@@ -4,10 +4,8 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
-export default tseslint.config(
-  {
-    ignores: ['eslint.config.mjs'],
-  },
+const apiConfigs = tseslint.config(
+  // 기존에 있던 ignores: ['eslint.config.mjs'] 제거됨 (루트로 이동)
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   eslintPluginPrettierRecommended,
@@ -33,3 +31,9 @@ export default tseslint.config(
     },
   },
 );
+
+// 생성된 설정에 대해 API 앱 내부 경로로만 스코프 강제
+export default apiConfigs.map((config) => ({
+  ...config,
+  files: ["apps/api/**/*.ts"],
+}));
