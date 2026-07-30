@@ -1,0 +1,76 @@
+# ==========================================
+# 1. Dependencies & Package Managers
+# ==========================================
+node_modules/
+apps/**/node_modules/
+libs/**/node_modules/
+package-lock.json
+yarn.lock
+.pnp*
+.yarn/
+
+# ==========================================
+# 2. Build Outputs & Framework Caches
+# ==========================================
+dist/
+apps/**/dist/
+libs/**/dist/
+build/
+out/
+.next/
+.turbo/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# ==========================================
+# 3. Environment Variables & Secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+!.env.template
+*.pem
+
+# ==========================================
+# 4. Prisma Generated Client (핵심 보완)
+# ==========================================
+# 로컬 OS용으로 생성된 Prisma Client가 도커(Linux)로 복사되는 것을 원천 차단합니다.
+# 차단하지 않으면 컨테이너 실행 시 바이너리 호환성 에러가 발생합니다.
+libs/database/src/generated/
+
+# ==========================================
+# 5. Testing, Logs & Local Data
+# ==========================================
+coverage/
+.nyc_output/
+*.log
+logs/
+.temp/
+.tmp/
+*.pid
+*.pid.lock
+*.seed
+*.db
+*.db-journal
+*.sqlite
+
+# ==========================================
+# 6. OS & IDEs (빌드 캐시 무효화 방지)
+# ==========================================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.eslintcache
+.stylelintcache
+**/.swc/
+
+# ==========================================
+# 7. Infra, Docs & Git (앱 구동과 무관한 리소스)
+# ==========================================
+.git/
+.gitignore
+infra/
+docs/
+README.md
