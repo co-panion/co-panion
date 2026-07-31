@@ -99,3 +99,18 @@ yarn.lock
 *.db-journal
 *.sqlite
 
+
+# 12. Infrastructure & Cloud CLI
+# ==========================================
+# Azure CLI 명령어 실행 시 로컬에 남을 수 있는 인증 토큰이나 임시 설정 파일을 차단합니다.
+.azure/
+
+
+# 13. Local Infrastructure Parameters (로컬 테스트용 시크릿 파라미터 방어)
+# ==========================================
+# Bicep 배포 테스트 시 민감 정보가 포함된 로컬 파라미터 파일의 업로드를 차단합니다.
+*.secret.json
+*.local.json
+*.local.bicepparam
+
+
