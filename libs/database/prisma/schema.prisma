@@ -4,13 +4,15 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"] // [PostGIS] 확장 활성화
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL") // 복구됨 (Prisma v6 필수)
+  provider   = "postgresql"
+  url        = env("DATABASE_URL") // 복구됨 (Prisma v6 필수)
+  extensions = [postgis, vector] // [PostGIS] DB 엔진 설치 강제
 }
 
 // ==========================================
@@ -72,7 +74,7 @@ enum AnimalStatus {
   RESCUED
   REUNITED
   PROTECTED
-  AVAILABLE
+  AVAILABLE // 입양 공고 전환 상태 (상태 머신 전이 포인트)
   COUNSELING
   ADOPTED
   DECEASED
@@ -87,8 +89,8 @@ enum AdoptionApplicationStatus {
   FOSTERING
   FINAL_REVIEW
   APPROVED
-  REJECTED
-  CANCELED
+  REJECTED // 심사 락(Lock) 발동 대상
+  CANCELED // 심사 락(Lock) 발동 대상
 }
 
 enum TargetType {
@@ -99,6 +101,7 @@ enum TargetType {
   ADOPTION_PROCESS
   POST
   MEDIA
+  BOOKMARK // [Idempotency] 북마크 타겟
 }
 
 // [입양 설문 Enum] (수치형 변환 항목 제외)
@@ -122,15 +125,32 @@ enum PetPolicy {
   NEED_CONFIRMATION
 }
 
+enum AiMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum IdentityVerificationMethod {
+  MOBILE_SMS // KCB, NICE 등 전통적 휴대폰 SMS 인증
+  PASS_APP // 통신사 PASS 앱 인증
+  FINANCIAL_CERT // 금융인증서 (금융결제원 YESKEY 등)
+  JOINT_CERT // 공동인증서 (구 공인인증서)
+  SIMPLE_AUTH // 카카오, 네이버, 토스 등 민간 간편인증
+}
+
 // ==========================================
 // [2] Module: Auth 
 // ==========================================
 model IntegratedAuthAccount {
-  accountId     String        @id @default(uuid()) @map("account_id") @db.Uuid
-  partyId       String        @map("party_id") @db.Uuid
-  username      String        @unique @db.VarChar(100)
-  passwordHash  String?       @map("password_hash") @db.VarChar(255)
-  accountStatus AccountStatus @default(ACTIVE) @map("account_status")
+  accountId String @id @default(uuid()) @map("account_id") @db.Uuid
+  partyId   String @map("party_id") @db.Uuid
+  username  String @unique @db.VarChar(100)
+
+  // [GCIP 위임] passwordHash 제거, Firebase UID로 대체
+  identityId      String        @unique @map("identity_id") @db.VarChar(128)
+  isEmailVerified Boolean       @default(false) @map("is_email_verified")
+  accountStatus   AccountStatus @default(ACTIVE) @map("account_status")
 
   lastLoginTime DateTime? @map("last_login_time") @db.Timestamptz
   registerTime  DateTime? @default(now()) @map("register_time") @db.Timestamptz
@@ -180,6 +200,8 @@ model PartyBase {
   accounts  IntegratedAuthAccount[]
   eventLogs UserEventLog[]
   contacts  PartyContactInfo[]
+  bookmarks Bookmark[]
+  chatLogs  AiChatSession[]
 
   memberships  PartyMembership[] @relation("MemberToGroup")
   groupMembers PartyMembership[] @relation("GroupToMember")
@@ -196,12 +218,14 @@ model PartyBase {
 }
 
 model PartyContactInfo {
-  contactId     String  @id @default(uuid()) @map("contact_id") @db.Uuid
-  partyId       String  @map("party_id") @db.Uuid
+  contactId String @id @default(uuid()) @map("contact_id") @db.Uuid
+  partyId   String @map("party_id") @db.Uuid
+
   email         String? @db.VarChar(255)
   phoneNumber   String? @map("phone_number") @db.VarChar(50)
   extraContacts Json?   @map("extra_contacts") @db.JsonB
-  isPrimary     Boolean @default(false) @map("is_primary")
+
+  isPrimary Boolean @default(false) @map("is_primary")
 
   registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
   updateTime   DateTime  @updatedAt @map("update_time") @db.Timestamptz
@@ -215,12 +239,17 @@ model PartyContactInfo {
 }
 
 model PartyIndividual {
-  partyId         String   @id @map("party_id") @db.Uuid
-  name            String   @db.VarChar(100)
-  di              String   @unique @db.VarChar(64)
-  ciUpdateTime    DateTime @map("ci_update_time") @db.Timestamptz
-  birthDateString String   @map("birth_date") @db.Char(8)
-  gender          String   @db.Char(1)
+  partyId  String @id @map("party_id") @db.Uuid
+  nickname String @db.VarChar(100)
+
+  di                 String                      @unique @db.VarChar(64)
+  isIdentityVerified Boolean                     @default(false) @map("is_identity_verified")
+  verificationMethod IdentityVerificationMethod? @map("verification_method")
+  verifyTime         DateTime?                   @map("verify_time") @db.Timestamptz
+
+  name            String? @map("real_name") @db.VarChar(50)
+  birthDateString String  @map("birth_date") @db.Char(8)
+  gender          String  @db.Char(1)
 
   partyBase PartyBase @relation(fields: [partyId], references: [partyId], onDelete: Cascade)
 
@@ -356,18 +385,50 @@ model ExternalApiCallLog {
   @@map("external_api_call_log")
 }
 
+// [AI 챗봇 컴플라이언스] - 임시
+model AiChatSession {
+  sessionId        String @id @default(uuid()) @map("session_id") @db.Uuid
+  partyId          String @map("party_id") @db.Uuid
+  complianceStatus String @default("SAFE") @map("compliance_status") @db.VarChar(20)
+
+  registerTime DateTime @default(now()) @map("register_time") @db.Timestamptz
+  updateTime   DateTime @updatedAt @map("update_time") @db.Timestamptz
+
+  partyBase PartyBase       @relation(fields: [partyId], references: [partyId], onDelete: Cascade)
+  messages  AiChatMessage[]
+
+  @@map("ai_chat_session")
+}
+
+// [AI 챗봇 컴플라이언스] - 임시
+model AiChatMessage {
+  messageId String        @id @default(uuid()) @map("message_id") @db.Uuid
+  sessionId String        @map("session_id") @db.Uuid
+  role      AiMessageRole @map("role")
+  content   String        @map("content") @db.Text
+
+  registerTime DateTime @default(now()) @map("register_time") @db.Timestamptz
+
+  session AiChatSession @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+
+  @@index([sessionId, registerTime])
+  @@map("ai_chat_message")
+}
+
 // ==========================================
 // [5] Module: Shelter
 // ==========================================
 model Shelter {
-  id             String  @id @default(uuid()) @map("id") @db.Uuid
-  businessId     String  @map("business_id") @db.Uuid
-  name           String  @map("name") @db.VarChar(100)
-  address        String  @map("address") @db.VarChar(255)
-  addressDetail  String? @map("address_detail") @db.VarChar(255)
-  phone          String  @map("phone") @db.VarChar(20)
-  operatingHours String  @map("operating_hours") @db.VarChar(100)
-  description    String  @map("description") @db.VarChar(500)
+  id             String @id @default(uuid()) @map("id") @db.Uuid
+  businessId     String @map("business_id") @db.Uuid
+  name           String @map("name") @db.VarChar(100)
+  phone          String @map("phone") @db.VarChar(20)
+  operatingHours String @map("operating_hours") @db.VarChar(100)
+  description    String @map("description") @db.VarChar(500)
+
+  // [Hybrid] UI 정규화 주소(JSONB) + 반경 검색 좌표(Geometry)
+  locationData Json                                  @map("location_data") @db.JsonB
+  geom         Unsupported("geometry(Point, 4326)")?
 
   registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
   updateTime   DateTime  @updatedAt @map("update_time") @db.Timestamptz
@@ -377,6 +438,7 @@ model Shelter {
   animals  Animal[]  @relation("ShelterLocation")
 
   @@index([businessId, deleteTime])
+  @@index([geom], name: "shelter_geom_idx", type: Gist) // PostGIS 공간 인덱스
   @@map("shelter")
 }
 
@@ -388,15 +450,18 @@ model Animal {
   managerPartyId String  @map("manager_party_id") @db.Uuid
   shelterId      String? @map("shelter_id") @db.Uuid
 
-  speciesId      Int          @map("species_id") @db.SmallInt
-  breedId        Int          @map("breed_id") @db.SmallInt
-  name           String       @map("name") @db.VarChar(50)
-  gender         Gender       @map("gender")
-  isNeutered     Boolean      @map("is_neutered")
-  age            Int?         @map("age") @db.SmallInt
-  isEstimatedAge Boolean      @map("is_estimated_age")
-  weight         Decimal      @map("weight") @db.Decimal(5, 2)
-  animalStatus   AnimalStatus @default(RESCUED) @map("animal_status")
+  speciesId      Int     @map("species_id") @db.SmallInt
+  breedId        Int     @map("breed_id") @db.SmallInt
+  name           String  @map("name") @db.VarChar(50)
+  gender         Gender  @map("gender")
+  isNeutered     Boolean @map("is_neutered")
+  age            Int?    @map("age") @db.SmallInt
+  isEstimatedAge Boolean @map("is_estimated_age")
+  weight         Decimal @map("weight") @db.Decimal(5, 2)
+
+  // [State Machine] 구조글 ➔ 입양 공고 전이 추적
+  animalStatus AnimalStatus @default(RESCUED) @map("animal_status")
+  convertTime  DateTime?    @map("convert_time") @db.Timestamptz
 
   registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
   updateTime   DateTime  @updatedAt @map("update_time") @db.Timestamptz
@@ -440,9 +505,12 @@ model RescuePost {
   animalId      Int      @map("animal_id")
   authorPartyId String   @map("author_party_id") @db.Uuid
   title         String   @map("title") @db.VarChar(100)
-  foundLocation String   @map("found_location") @db.VarChar(255)
   foundTime     DateTime @map("found_time") @db.Timestamptz
   description   String   @map("description") @db.Text
+
+  // [Hybrid] 구조 발견 위치 (오픈 API 연동 + 카카오맵 핀)
+  locationData Json                                  @map("location_data") @db.JsonB
+  geom         Unsupported("geometry(Point, 4326)")?
 
   registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
   updateTime   DateTime  @updatedAt @map("update_time") @db.Timestamptz
@@ -452,6 +520,7 @@ model RescuePost {
   authorParty PartyBase @relation(fields: [authorPartyId], references: [partyId], onDelete: Cascade)
 
   @@index([animalId, deleteTime])
+  @@index([geom], name: "rescue_geom_idx", type: Gist)
   @@map("rescue_post")
 }
 
@@ -460,7 +529,7 @@ model AdoptionProcess {
   animalId         Int                       @map("animal_id")
   applicantPartyId String                    @map("applicant_party_id") @db.Uuid
   status           AdoptionApplicationStatus @default(PENDING) @map("status")
-  memo             String?                   @map("memo") @db.Text
+  internalNotes    Json?                     @map("internal_notes") @db.JsonB
 
   registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
   updateTime   DateTime  @updatedAt @map("update_time") @db.Timestamptz
@@ -488,7 +557,9 @@ model AdoptionDetail {
   petPolicy           PetPolicy     @map("pet_policy")
   isFamilyConsented   Boolean       @default(false) @map("is_family_consented")
 
-  updateTime DateTime @updatedAt @map("update_time") @db.Timestamptz
+  // [PII Lifecycle] 90일 후 스케줄러(Cron)에 의한 자동 파기 기준 시간
+  piiDisposeTime DateTime? @map("pii_dispose_time") @db.Timestamptz
+  updateTime     DateTime  @updatedAt @map("update_time") @db.Timestamptz
 
   adoptionProcess AdoptionProcess @relation(fields: [adoptionProcessId], references: [id], onDelete: Cascade)
 
@@ -508,9 +579,25 @@ model Media {
 
   registerTime DateTime  @default(now()) @map("register_time") @db.Timestamptz
   deleteTime   DateTime? @map("delete_time") @db.Timestamptz
+  // [고아 파일 정리] deleteTime이 찍힌 레코드는 비동기 Batch Job(S3 Sync)을 통해 실제 파일 삭제 및 레코드 Hard Delete 처리
 
   @@index([targetType, targetId, deleteTime])
   @@map("media")
+}
+
+// [Idempotency] 복합 유니크 인덱스를 통한 북마크 낙관적 업데이트 락(Lock)
+model Bookmark {
+  bookmarkId String     @id @default(uuid()) @map("bookmark_id") @db.Uuid
+  partyId    String     @map("party_id") @db.Uuid
+  targetType TargetType @map("target_type")
+  targetId   String     @map("target_id") @db.Uuid
+
+  registerTime DateTime @default(now()) @map("register_time") @db.Timestamptz
+
+  partyBase PartyBase @relation(fields: [partyId], references: [partyId], onDelete: Cascade)
+
+  @@unique([partyId, targetType, targetId]) // 레이스 컨디션 방어 및 멱등성 보장
+  @@map("bookmark")
 }
 
 model Post {
