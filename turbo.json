@@ -1,5 +1,6 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
+  "globalEnv": ["NODE_ENV", "DATABASE_URL", "DEBUG"],
   "ui": "tui",
   "tasks": {
     "build": {
@@ -17,9 +18,7 @@
     "dev": {
       "cache": false,
       "persistent": true
-    }
-  },
-  "pipeline": {
+    },
     "docs:generate": {
       "dependsOn": ["^build"],
       "outputs": ["../docs/docs/api-models/**", "../docs/static/backend-graph/**"]

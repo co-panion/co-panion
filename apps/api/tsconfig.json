@@ -1,8 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     //"resolvePackageJsonExports": true,
     //"esModuleInterop": true,
     //"isolatedModules": true,
@@ -10,11 +10,12 @@
     //"removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
+    "noEmit": false,
     //"allowSyntheticDefaultImports": true,
     //"target": "ES2023",
     //"sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+    "rootDir": "../..",
     //"incremental": true,
     //"skipLibCheck": true,
     //"strictNullChecks": true,
@@ -22,5 +23,13 @@
     //"noImplicitAny": false,
     //"strictBindCallApply": false,
     //"noFallthroughCasesInSwitch": false
-  }
+  },
+  "include": [
+    "src/**/*",
+    "../../libs/**/*"
+  ],
+  "exclude": [
+    "node_modules", 
+    "dist"
+  ]
 }
