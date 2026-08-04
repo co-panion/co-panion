@@ -10,18 +10,26 @@
   },
   "dependencies": {
     "@co-panion/database": "workspace:*",
+    "@co-panion/shared": "workspace:^",
+    "@co-panion/ui": "workspace:^",
+    "@hookform/resolvers": "^5.7.1",
+    "axios": "^1.19.0",
     "next": "16.2.10",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.84.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.5.4",
     "eslint": "^8.57.1",
     "eslint-config-next": "16.2.10",
-    "tailwindcss": "^4",
+    "postcss": "^8.5.25",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5"
   }
 }

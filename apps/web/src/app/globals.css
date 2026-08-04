@@ -1,16 +1,31 @@
-/* 기존 Tailwind의 h-full, min-h-full 역할 대체 */
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+@import "tailwindcss";
+
+@source "../../../../libs/ui/src";
+
+@theme {
+  --color-primary: #111827;
+  --color-primary-foreground: #ffffff;
+  --background: #ffffff;
+  --foreground: #171717;
 }
 
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-  /* 기존 font-sans 및 antialiased 역할 대체 */
-  font-family: var(--font-geist-sans), sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* 시스템 다크모드 환경별 CSS 변수 재정의 */
+/* @media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+} */
+
+@layer base {
+  body {
+    color: var(--foreground);
+    background-color: var(--background);
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
 }
