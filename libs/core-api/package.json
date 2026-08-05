@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@co-panion/database": "workspace:^",
     "@co-panion/shared": "workspace:^",
     "@nestjs/common": "^11.0.1",
     "@nestjs/swagger": "^11.4.6",
