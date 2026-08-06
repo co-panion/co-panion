@@ -15,7 +15,7 @@ jobs:
       - name: Assign Issue to Project and Update Start/Target Dates
         env:
           GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
-          PROJECT_ID: "PVT_kwDOEljh1s4BeVcC"
+          PROJECT_ID: "PVT_kwDOEljh1s4BeVZK"
           START_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhYwc3A"
           TARGET_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhYwc3E"
           ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
