@@ -1,0 +1,44 @@
+name: Retroactive Sync Project Dates
+
+on:
+  workflow_dispatch: # 버튼 클릭을 통한 수동 실행 트리거
+
+jobs:
+  migrate_dates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Sync Past Issues to Project
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          PROJECT_ID: "PVT_kwDOEljh1s4BeVcC"
+          START_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhYwc3A"
+          TARGET_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhYwc3E"
+        run: |
+          # 전체 이슈 목록(Open/Closed)을 JSON으로 조회 (최대 100개 기준)
+          issues=$(gh issue list --state all --json id,createdAt,closedAt --limit 100)
+          
+          echo "$issues" | jq -c '.[]' | while read -r issue; do
+            ISSUE_NODE_ID=$(echo "$issue" | jq -r '.id')
+            CREATED_AT=$(echo "$issue" | jq -r '.createdAt' | cut -d'T' -f1)
+            CLOSED_AT=$(echo "$issue" | jq -r '.closedAt')
+            
+            # 이슈를 Project에 연결하고 해당 프로젝트 Item의 고유 ID 획득
+            ITEM_ID=$(gh api graphql -f query='
+              mutation {
+                addProjectV2ItemById(input: {projectId: "'$PROJECT_ID'", contentId: "'$ISSUE_NODE_ID'"}) {
+                  item { id }
+                }
+              }' --jq '.data.addProjectV2ItemById.item.id')
+            
+            # 실제 이슈 오픈 날짜로 Start date 필드 업데이트
+            gh project item-edit --id "$ITEM_ID" --project-id "$PROJECT_ID" --field-id "$START_FIELD_ID" --date "$CREATED_AT"
+            
+            # 이슈가 닫힌 상태라면 Target date 필드 업데이트
+            if [ "$CLOSED_AT" != "null" ]; then
+              CLOSED_DATE=$(echo "$CLOSED_AT" | cut -d'T' -f1)
+              gh project item-edit --id "$ITEM_ID" --project-id "$PROJECT_ID" --field-id "$TARGET_FIELD_ID" --date "$CLOSED_DATE"
+            fi
+          done
