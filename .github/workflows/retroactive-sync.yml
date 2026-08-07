@@ -14,8 +14,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
           PROJECT_ID: "PVT_kwDOEljh1s4BeVZK"
-          START_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhYwc3A"
-          TARGET_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhYwc3E"
+          START_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhZ5jAU"
+          TARGET_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhZ5jC0"
         run: |
           # 전체 이슈 목록(Open/Closed)을 JSON으로 조회 (최대 100개 기준)
           issues=$(gh issue list --state all --json id,createdAt,closedAt --limit 100)

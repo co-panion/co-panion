@@ -16,8 +16,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
           PROJECT_ID: "PVT_kwDOEljh1s4BeVZK"
-          START_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhYwc3A"
-          TARGET_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhYwc3E"
+          START_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhZ5jAU"
+          TARGET_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhZ5jC0"
           ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
         run: |
           # 1. 이슈를 프로젝트 아이템으로 강제 등록하고 고유 Item ID 반환
