@@ -1,16 +1,17 @@
-/* 기존 Tailwind의 h-full, min-h-full 역할 대체 */
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #ffffff;
+  --color-fg: #111827;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
 }
 
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
-  /* 기존 font-sans 및 antialiased 역할 대체 */
-  font-family: var(--font-geist-sans), sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.dark {
+  --color-bg: #111827;
+  --color-fg: #f9fafb;
+  --color-primary: #60a5fa;
+  --color-primary-hover: #3b82f6;
 }
