@@ -19,9 +19,8 @@
       "cache": false,
       "persistent": true
     },
-    "docs:generate": {
-      "dependsOn": ["^build"],
-      "outputs": ["../docs/docs/api-models/**", "../docs/static/backend-graph/**"]
+    "clean": {
+      "cache": false
     }
   }
 }
