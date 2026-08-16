@@ -19,7 +19,10 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "docs:generate": "compodoc -p tsconfig.json -d ../docs/static/backend-graph"
+    "docs:generate": "pnpm run docs:typedoc && pnpm run docs:compodoc",
+    "docs:typedoc": "typedoc --plugin typedoc-plugin-markdown --out ../docs/pages/api-docs src/",
+    "docs:compodoc": "compodoc -p tsconfig.json -d ../docs/pages/architecture -w",
+    "openapi:export": "nest start --entryFile export-openapi"
   },
   "dependencies": {
     "@co-panion/core-api": "workspace:^",
@@ -30,8 +33,10 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.4.6",
+    "@prisma/client": "^6.19.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
+    "firebase-admin": "^14.2.0",
     "helmet": "^8.3.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"

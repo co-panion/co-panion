@@ -1,0 +1,38 @@
+# Co-panion Developer Portal
+
+환영합니다. 이 문서는 **Nextra** 기반으로 새롭게 개편된 Co-panion 프로젝트의 통합 기술 문서 허브입니다.
+
+<div className="flex gap-2 mt-4 mb-8">
+  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">Next.js</span>
+  <span className="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm font-medium">Tailwind CSS</span>
+  <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">Nextra</span>
+</div>
+
+---
+
+## 통합 산출물 파이프라인 (Deliverables Pipeline)
+
+Co-panion 모노레포 환경에서 생성되는 5대 핵심 기술 산출물들이 이곳 중앙 포털로 통합 연동됩니다.
+
+## 1. API 인터페이스 산출물 (Swagger)
+* 최신화된 REST API 엔드포인트 명세 문서 (경로, 메서드, 헤더, 파라미터).
+* 요청(Request) 및 응답(Response) 페이로드의 데이터 스키마.
+* 문서 내에 임베드되어 브라우저에서 직접 API 호출 테스트가 가능한 대화형 UI.
+
+## 2. 클라이언트 UI 자산 산출물 (Storybook)
+* 독립적으로 시각화된 프론트엔드 UI 컴포넌트 카탈로그.
+* 컴포넌트별 Props 제어판 및 상태별(Hover, Active, Disabled 등) 렌더링 예시.
+* 문서 시스템에 링크되거나 임베드되는 디자인 시스템 레퍼런스.
+
+## 3. 코드 레벨 명세 산출물 (TypeDoc)
+* 소스코드 내 JSDoc 주석 기반으로 자동 추출된 마크다운(`.md`) 문서.
+* 유틸리티 함수, 인터페이스, 타입 정의, 클래스 등에 대한 정적 API 레퍼런스.
+
+## 4. 백엔드 아키텍처 산출물 (Compodoc)
+* 모듈, 컨트롤러, 서비스 프로바이더 간의 의존성(Dependency) 시각화 다이어그램.
+* 백엔드 애플리케이션의 라우팅 구조 및 컴포넌트 트리를 요약한 아키텍처 맵.
+
+## 5. 형상 관리 및 품질 자동화 산출물 (ESLint + Husky)
+* Git 커밋 단계에서 자동으로 실행 및 기록되는 코드 포매팅 및 린트(Lint) 검증 리포트.
+* 팀 컨벤션(Conventional Commits 명세)이 엄격하게 검증되고 정렬된 무결점 Git 커밋 히스토리.
+* 규격화된 커밋 로그를 바탕으로 버전 배포마다 자동 추출되는 릴리스 노트(Changelog).
