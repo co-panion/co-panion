@@ -1,3 +1,4 @@
+// apps/api/src/main.ts
 // (참고) https://github.com/calcom/cal.diy/blob/main/apps/api/v2/src/main.ts
 // Execute bootstrap (Pipes, Interceptors, CORS, etc.) -> bootstrap.ts -> setup
 // (참고) https://github.com/calcom/cal.diy/blob/main/apps/api/v2/src/bootstrap.ts

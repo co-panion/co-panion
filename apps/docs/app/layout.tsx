@@ -1,14 +1,18 @@
+import type { ReactNode } from "react";
 import { Footer, Layout, Navbar } from "nextra-theme-docs";
 import { Head } from "nextra/components";
 import { getPageMap } from "nextra/page-map";
-import "nextra-theme-docs/style.css";
 import "./globals.css";
 
 export const metadata = {
   title: "Co-panion Docs",
 };
 
-export default async function RootLayout({ children }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const pageMap = await getPageMap();
 
   const navbar = (

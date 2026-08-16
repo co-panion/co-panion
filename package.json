@@ -15,6 +15,7 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
+    "@compodoc/compodoc": "^2.0.0",
     "@swc/helpers": "^0.5.23",
     "@types/node": "^26.1.1",
     "eslint": "^8.57.1",
@@ -25,6 +26,8 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
     "turbo": "^2.10.5",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.12.0",
     "typescript": "5.9.2"
   },
   "packageManager": "pnpm@9.0.0",
@@ -39,7 +42,7 @@
     ]
   },
   "volta": {
-    "node": "20.11.0",
+    "node": "22.23.2",
     "pnpm": "9.0.0"
   },
   "prisma": {
@@ -49,6 +52,9 @@
   "pnpm": {
     "overrides": {
       "typescript": "5.9.2"
+    },
+    "patchedDependencies": {
+      "nextra-theme-docs@4.6.1": "patches/nextra-theme-docs@4.6.1.patch"
     }
   }
 }

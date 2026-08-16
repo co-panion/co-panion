@@ -21,6 +21,24 @@
     },
     "clean": {
       "cache": false
+    },
+    "docs:generate": {
+      "outputs": [
+        "../docs/pages/api-docs/**",
+        "../docs/pages/architecture/**",
+        "../docs/public/storybook/**"
+      ]
+    },
+    "docs:build": {
+      "dependsOn": ["docs:generate"],
+      "outputs": [".next/**"]
+    },
+    "openapi:export": {
+      "outputs": ["../../api-spec.json"]
+    },
+    "openapi:generate": {
+      "dependsOn": ["@co-panion/api#openapi:export"],
+      "outputs": ["src/api/endpoints/**", "src/api/model/**"]
     }
   }
 }
