@@ -1,24 +1,25 @@
-// apps/web/tailwind.config.ts
 import type { Config } from "tailwindcss";
-import sharedConfig from "../../tailwind-workspace-preset";
-//import { dirname, join } from "path";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+// libs/ui 패키지의 프리셋을 패키지 이름으로 깔끔하게 임포트
+import sharedPreset from "@co-panion/ui/tailwind.preset";
 
-const config: Config = {
-  presets: [sharedConfig],
+// ESM 환경에서 __dirname 대체 구현
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const config = {
+  // 공통 프리셋 상속
+  presets: [sharedPreset],
+
   content: [
-    // 1. Web 앱 내부 경로 (순수 도메인 및 뷰 영역)
-    "./src/**/*.{js,ts,jsx,tsx,mdx}",
-    "../../libs/ui/src/**/*.{js,ts,jsx,tsx}",
-    // 2. 💡 [FSD/Monorepo 표준] 패키지 이름을 통해 동적으로 경로를 역추적하여 스캔
-    // join(
-    //   dirname(require.resolve("@co-panion/ui/package.json")),
-    //   "src/**/*.{js,ts,jsx,tsx}"
-    // ),
+    path.join(__dirname, "./src/**/*.{js,ts,jsx,tsx,mdx}"), // 웹 앱 내부 소스 경로 (절대 경로 기반)
+    path.join(__dirname, "../../libs/ui/src/**/*.{js,ts,jsx,tsx}"), // UI 패키지 소스 경로 동적 연동 (절대 경로 기반)
   ],
   theme: {
     extend: {},
   },
   plugins: [],
-};
+} satisfies Config;
 
 export default config;

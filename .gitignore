@@ -114,3 +114,6 @@ yarn.lock
 *.local.bicepparam
 
 
+
+*storybook.log
+storybook-static

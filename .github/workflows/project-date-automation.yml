@@ -1,0 +1,39 @@
+name: Sync Issue Dates to Project
+
+on:
+  issues:
+    types: [opened, closed]
+
+jobs:
+  update_project_dates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Today's Date
+        id: date
+        run: echo "today=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - name: Assign Issue to Project and Update Start/Target Dates
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          PROJECT_ID: "PVT_kwDOEljh1s4BeVZK"
+          START_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhZ5jAU"
+          TARGET_FIELD_ID: "PVTF_lADOEljh1s4BeVZKzhZ5jC0"
+          ISSUE_NODE_ID: ${{ github.event.issue.node_id }}
+        run: |
+          # 1. 이슈를 프로젝트 아이템으로 강제 등록하고 고유 Item ID 반환
+          ITEM_ID=$(gh api graphql -f query='
+            mutation {
+              addProjectV2ItemById(input: {projectId: "'$PROJECT_ID'", contentId: "'$ISSUE_NODE_ID'"}) {
+                item { id }
+              }
+            }' --jq '.data.addProjectV2ItemById.item.id')
+
+          # 2. 이벤트 유형에 따른 Date 커스텀 필드 갱신
+          if [ "${{ github.event.action }}" == "opened" ]; then
+            # 이슈 오픈 시: Start date 업데이트
+            gh project item-edit --id "$ITEM_ID" --project-id "$PROJECT_ID" --field-id "$START_FIELD_ID" --date "${{ steps.date.outputs.today }}"
+          
+          elif [ "${{ github.event.action }}" == "closed" ]; then
+            # 이슈 종료 시: Target date 업데이트
+            gh project item-edit --id "$ITEM_ID" --project-id "$PROJECT_ID" --field-id "$TARGET_FIELD_ID" --date "${{ steps.date.outputs.today }}"
+          fi

@@ -8,6 +8,10 @@
     "target": "ES2022",
     "noEmit": false
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "tailwind.config.ts",
+    "tailwind.preset.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

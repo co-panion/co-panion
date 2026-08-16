@@ -1,0 +1,7 @@
+{
+  "index": "홈",
+  "architecture": "백엔드 아키텍처 (Compodoc)",
+  "api-docs": "코드 명세서 (TypeDoc)",
+  "ui-components": "UI 디자인 시스템",
+  "api-reference": "API 엔드포인트 명세"
+}

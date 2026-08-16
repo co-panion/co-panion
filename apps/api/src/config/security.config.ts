@@ -4,8 +4,11 @@ import { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 
-export const setupSecurity = (app:INestApplication, configService:ConfigService) => {
-  const corsOrigin = configService.get<string>('app.corsOrigin');
+export const setupSecurity = (
+  app: INestApplication,
+  configService: ConfigService,
+) => {
+  const corsOrigin = configService.get<string[]>('app.corsOrigin');
 
   // 글로벌 보안 헤더(Helmet) 적용
   app.use(
@@ -25,14 +28,15 @@ export const setupSecurity = (app:INestApplication, configService:ConfigService)
 
   // 글로벌 CORS 정책 적용
   app.enableCors({
-    origin: corsOrigin,     // 허용할 도메인 (apps/web 주소)
+    origin: corsOrigin, // 허용할 도메인 (apps/web 주소)
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,      // 쿠키 및 인증 헤더 포함 허용
-    allowedHeaders: [       // TODO: 어떤 내용들을 담을지 결정해야함
-      "Accept",
-      "Authorization",
-      "Content-Type",
-      "Origin",
+    credentials: true, // 쿠키 및 인증 헤더 포함 허용
+    allowedHeaders: [
+      // TODO: 어떤 내용들을 담을지 결정해야함
+      'Accept',
+      'Authorization',
+      'Content-Type',
+      'Origin',
     ],
     maxAge: 86_400,
   });
