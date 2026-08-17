@@ -41,7 +41,11 @@ export function RHFTextField({ name, ...props }: RHFTextFieldProps) {
           validationState={
             error ? "invalid" : (props.validationState ?? "default")
           }
-          validationMessage={error?.message ?? props.validationMessage}
+          {...(error?.message
+            ? { validationMessage: error.message }
+            : props.validationMessage
+              ? { validationMessage: props.validationMessage }
+              : {})}
         />
       )}
     />

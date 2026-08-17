@@ -8,6 +8,10 @@ import nextTs from "eslint-config-next/typescript";
 const webConfigs = [...nextVitals, ...nextTs].map((config) => ({
   ...config,
   files: ["apps/web/**/*.{js,jsx,ts,tsx}"],
+  rules: {
+    ...config.rules,
+    "@next/next/no-html-link-for-pages": ["error", "apps/web/src/app"],
+  },
 }));
 
 export default webConfigs;

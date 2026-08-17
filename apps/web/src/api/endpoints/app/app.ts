@@ -38,27 +38,27 @@ const withQueryKey = <T extends object, K>(
   return result;
 };
 
-export type appControllerGetHelloResponse200 = {
+export type appControllerGetHelloV1Response200 = {
   data: void;
   status: 200;
 };
 
-export type appControllerGetHelloResponseSuccess =
-  appControllerGetHelloResponse200 & {
+export type appControllerGetHelloV1ResponseSuccess =
+  appControllerGetHelloV1Response200 & {
     headers: Headers;
   };
-export type appControllerGetHelloResponse =
-  appControllerGetHelloResponseSuccess;
+export type appControllerGetHelloV1Response =
+  appControllerGetHelloV1ResponseSuccess;
 
-export const getAppControllerGetHelloUrl = () => {
-  return `/`;
+export const getAppControllerGetHelloV1Url = () => {
+  return `/api/v1`;
 };
 
-export const appControllerGetHello = async (
+export const appControllerGetHelloV1 = async (
   options?: RequestInit,
-): Promise<appControllerGetHelloResponse> => {
-  return customInstance<appControllerGetHelloResponse>(
-    getAppControllerGetHelloUrl(),
+): Promise<appControllerGetHelloV1Response> => {
+  return customInstance<appControllerGetHelloV1Response>(
+    getAppControllerGetHelloV1Url(),
     {
       ...options,
       method: "GET",
@@ -66,17 +66,17 @@ export const appControllerGetHello = async (
   );
 };
 
-export const getAppControllerGetHelloQueryKey = () => {
-  return [`/`] as const;
+export const getAppControllerGetHelloV1QueryKey = () => {
+  return [`/api/v1`] as const;
 };
 
-export const getAppControllerGetHelloQueryOptions = <
-  TData = Awaited<ReturnType<typeof appControllerGetHello>>,
+export const getAppControllerGetHelloV1QueryOptions = <
+  TData = Awaited<ReturnType<typeof appControllerGetHelloV1>>,
   TError = unknown,
 >(options?: {
   query?: Partial<
     UseQueryOptions<
-      Awaited<ReturnType<typeof appControllerGetHello>>,
+      Awaited<ReturnType<typeof appControllerGetHelloV1>>,
       TError,
       TData
     >
@@ -84,41 +84,42 @@ export const getAppControllerGetHelloQueryOptions = <
 }) => {
   const { query: queryOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getAppControllerGetHelloQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getAppControllerGetHelloV1QueryKey();
 
   const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof appControllerGetHello>>
-  > = ({ signal }) => appControllerGetHello({ signal });
+    Awaited<ReturnType<typeof appControllerGetHelloV1>>
+  > = ({ signal }) => appControllerGetHelloV1({ signal });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof appControllerGetHello>>,
+    Awaited<ReturnType<typeof appControllerGetHelloV1>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type AppControllerGetHelloQueryResult = NonNullable<
-  Awaited<ReturnType<typeof appControllerGetHello>>
+export type AppControllerGetHelloV1QueryResult = NonNullable<
+  Awaited<ReturnType<typeof appControllerGetHelloV1>>
 >;
-export type AppControllerGetHelloQueryError = unknown;
+export type AppControllerGetHelloV1QueryError = unknown;
 
-export function useAppControllerGetHello<
-  TData = Awaited<ReturnType<typeof appControllerGetHello>>,
+export function useAppControllerGetHelloV1<
+  TData = Awaited<ReturnType<typeof appControllerGetHelloV1>>,
   TError = unknown,
 >(
   options: {
     query: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof appControllerGetHello>>,
+        Awaited<ReturnType<typeof appControllerGetHelloV1>>,
         TError,
         TData
       >
     > &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof appControllerGetHello>>,
+          Awaited<ReturnType<typeof appControllerGetHelloV1>>,
           TError,
-          Awaited<ReturnType<typeof appControllerGetHello>>
+          Awaited<ReturnType<typeof appControllerGetHelloV1>>
         >,
         "initialData"
       >;
@@ -127,23 +128,23 @@ export function useAppControllerGetHello<
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useAppControllerGetHello<
-  TData = Awaited<ReturnType<typeof appControllerGetHello>>,
+export function useAppControllerGetHelloV1<
+  TData = Awaited<ReturnType<typeof appControllerGetHelloV1>>,
   TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof appControllerGetHello>>,
+        Awaited<ReturnType<typeof appControllerGetHelloV1>>,
         TError,
         TData
       >
     > &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof appControllerGetHello>>,
+          Awaited<ReturnType<typeof appControllerGetHelloV1>>,
           TError,
-          Awaited<ReturnType<typeof appControllerGetHello>>
+          Awaited<ReturnType<typeof appControllerGetHelloV1>>
         >,
         "initialData"
       >;
@@ -152,14 +153,14 @@ export function useAppControllerGetHello<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 };
-export function useAppControllerGetHello<
-  TData = Awaited<ReturnType<typeof appControllerGetHello>>,
+export function useAppControllerGetHelloV1<
+  TData = Awaited<ReturnType<typeof appControllerGetHelloV1>>,
   TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof appControllerGetHello>>,
+        Awaited<ReturnType<typeof appControllerGetHelloV1>>,
         TError,
         TData
       >
@@ -170,14 +171,14 @@ export function useAppControllerGetHello<
   queryKey: DataTag<QueryKey, TData, TError>;
 };
 
-export function useAppControllerGetHello<
-  TData = Awaited<ReturnType<typeof appControllerGetHello>>,
+export function useAppControllerGetHelloV1<
+  TData = Awaited<ReturnType<typeof appControllerGetHelloV1>>,
   TError = unknown,
 >(
   options?: {
     query?: Partial<
       UseQueryOptions<
-        Awaited<ReturnType<typeof appControllerGetHello>>,
+        Awaited<ReturnType<typeof appControllerGetHelloV1>>,
         TError,
         TData
       >
@@ -187,7 +188,7 @@ export function useAppControllerGetHello<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getAppControllerGetHelloQueryOptions(options);
+  const queryOptions = getAppControllerGetHelloV1QueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

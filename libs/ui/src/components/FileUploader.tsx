@@ -9,12 +9,12 @@ import React, {
 import { cn } from "@co-panion/utils";
 
 export interface FileUploaderProps {
-  label?: string;
-  helperText?: string;
+  label?: string | undefined;
+  helperText?: string | undefined;
   error?: boolean;
   maxFiles?: number;
-  maxSizeMB?: number;
-  accept?: string;
+  maxSize?: number;
+  acceptedTypes?: string[];
   value?: File[];
   onChange?: (files: File[]) => void;
   containerClassName?: string;
@@ -25,8 +25,8 @@ export const FileUploader = ({
   helperText,
   error = false,
   maxFiles = 4,
-  maxSizeMB = 5,
-  accept = "image/png, image/jpeg, image/jpg, application/pdf",
+  maxSize = 5,
+  acceptedTypes = ["image/png", "image/jpeg", "image/jpg", "application/pdf"],
   value,
   onChange,
   containerClassName,
@@ -35,6 +35,7 @@ export const FileUploader = ({
   const [previews, setPreviews] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const acceptString = acceptedTypes.join(",");
 
   // 외부 value 동기화
   useEffect(() => {
@@ -58,8 +59,8 @@ export const FileUploader = ({
 
     for (const file of fileArray) {
       if (files.length + validFiles.length >= maxFiles) break;
-      if (file.size > maxSizeMB * 1024 * 1024) {
-        alert(`파일 크기는 ${maxSizeMB}MB를 초과할 수 없습니다: ${file.name}`);
+      if (file.size > maxSize * 1024 * 1024) {
+        alert(`파일 크기는 ${maxSize}MB를 초과할 수 없습니다: ${file.name}`);
         continue;
       }
       validFiles.push(file);
@@ -117,20 +118,20 @@ export const FileUploader = ({
       {/* 미리보기 그리드 배열 */}
       {files.length > 0 && (
         <div className="grid grid-cols-4 gap-2 mb-2">
-          {previews.map((preview, index) => (
+          {files.map((file, index) => (
             <div
               key={index}
               className="relative aspect-4/3 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 group"
             >
-              {files[index].type.startsWith("image/") ? (
+              {file.type.startsWith("image/") ? (
                 <img
-                  src={preview}
+                  src={previews[index]}
                   alt="preview"
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-xs text-gray-500 p-2 text-center truncate">
-                  {files[index].name}
+                  {file.name}
                 </div>
               )}
               <button
@@ -191,13 +192,13 @@ export const FileUploader = ({
             클릭 또는 드래그하여 파일을 업로드하세요
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            최대 {maxFiles}개, 장당 {maxSizeMB}MB 이하
+            최대 {maxFiles}개, 장당 {maxSize}MB 이하
           </p>
           <input
             ref={inputRef}
             type="file"
             multiple
-            accept={accept}
+            accept={acceptString}
             className="hidden"
             onChange={handleInputChange}
           />

@@ -23,7 +23,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       success,
       helperText,
       isPassword = false,
-      type: _type,
+      type = "text",
       id: customId,
       containerClassName,
       className = "",
@@ -37,11 +37,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
     // UI 종속적인 상태(비밀번호 숨김/보기)만 내부에 유지
     const [showPassword, setShowPassword] = useState(false);
 
-    const inputType = isPassword
-      ? showPassword
-        ? "text"
-        : "password"
-      : props.type || "text";
+    const inputType = isPassword ? (showPassword ? "text" : "password") : type;
 
     return (
       <div className={cn("flex flex-col gap-1 w-full", containerClassName)}>

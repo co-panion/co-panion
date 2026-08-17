@@ -19,6 +19,7 @@
     "@swc/helpers": "^0.5.23",
     "@types/node": "^26.1.1",
     "eslint": "^8.57.1",
+    "eslint-plugin-storybook": "^10.5.8",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.2",
     "prettier": "^3.7.4",
@@ -60,5 +61,8 @@
       "sharp",
       "unrs-resolver"
     ]
+  },
+  "dependencies": {
+    "tailwindcss-animate": "^1.0.7"
   }
 }

@@ -1,7 +1,7 @@
 // apps/web/src/features/matching-self-check/model/schema.ts
 import { z } from "zod";
 
-export const matchingSelfCheckSchema = z.object({
+export const _matchingSelfCheckSchema = z.object({
   contact: z
     .string()
     .min(1, "연락처를 입력해주세요.")
@@ -18,4 +18,6 @@ export const matchingSelfCheckSchema = z.object({
     }),
 });
 
-export type MatchingSelfCheckFormData = z.infer<typeof matchingSelfCheckSchema>;
+export type _MatchingSelfCheckFormData = z.infer<
+  typeof _matchingSelfCheckSchema
+>;

@@ -9,17 +9,15 @@ import { RHFTextField } from "@/shared/ui/forms/RHFTextField";
 import { RHFFileUploader } from "@/shared/ui/forms/RHFFileUploader";
 import { RHFRangeSlider } from "@/shared/ui/forms/RHFRangeSlider";
 import {
-  matchingSelfCheckSchema,
-  type MatchingSelfCheckFormData,
+  _matchingSelfCheckSchema,
+  type _MatchingSelfCheckFormData,
 } from "../model/schema";
-
-import { _selfCheckSchema, type _SelfCheckFormData } from "../model/schema";
 
 export function MatchingSelfCheckForm() {
   const router = useRouter(); // 라우터 인스턴스 할당
 
-  const methods = useForm<MatchingSelfCheckFormData>({
-    resolver: zodResolver(matchingSelfCheckSchema),
+  const methods = useForm<_MatchingSelfCheckFormData>({
+    resolver: zodResolver(_matchingSelfCheckSchema),
     defaultValues: {
       contact: "",
       homeImages: [],
@@ -28,7 +26,7 @@ export function MatchingSelfCheckForm() {
     mode: "onChange",
   });
 
-  const onSubmit = async (data: MatchingSelfCheckFormData) => {
+  const onSubmit = async (data: _MatchingSelfCheckFormData) => {
     try {
       // 1. API 호출 (추후 React Query Mutation 연결 영역)
       console.log("데이터 서버 전송 완료:", data); // await submitMatchingSelfCheck(data);
@@ -77,9 +75,9 @@ export function MatchingSelfCheckForm() {
             </label>
             <RHFFileUploader
               name="homeImages"
-              maxFileCount={4}
-              maxFileSizeInBytes={5 * 1024 * 1024}
-              acceptTypes={["image/jpeg", "image/png"]}
+              maxFiles={4}
+              maxSize={5}
+              acceptedTypes={["image/jpeg, image/png"]}
             />
           </div>
         </section>

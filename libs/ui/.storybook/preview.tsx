@@ -1,4 +1,5 @@
-import type { Preview } from "@storybook/nextjs-vite";
+import type { Preview } from "@storybook/react";
+import "../../../apps/web/src/app/globals.css";
 
 const preview: Preview = {
   parameters: {

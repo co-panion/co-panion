@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@co-panion/database": "workspace:*",
+    "@co-panion/shared": "workspace:*",
     "@co-panion/ui": "workspace:^",
     "@hookform/resolvers": "^5.8.0",
     "@tanstack/react-query": "^5.101.4",
@@ -35,28 +36,24 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "latest",
-    "@storybook/addon-a11y": "^10.5.8",
-    "@storybook/addon-docs": "^10.5.8",
-    "@storybook/addon-vitest": "^10.5.8",
-    "@storybook/nextjs-vite": "^10.5.8",
+    "storybook": "8.6.18",
+    "@storybook/addon-a11y": "8.6.18",
+    "@storybook/addon-docs": "8.6.18",
+    "@storybook/nextjs": "8.6.18",
+    "@storybook/react": "8.6.18",
+    "@storybook/react-vite": "8.6.18",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitest/browser-playwright": "latest",
-    "@vitest/coverage-v8": "latest",
     "autoprefixer": "^10.5.4",
     "eslint": "^8.57.1",
     "eslint-config-next": "16.2.10",
-    "eslint-plugin-storybook": "^10.5.8",
+    "msw": "^2.15.0",
     "orval": "^8.24.0",
-    "playwright": "latest",
-    "storybook": "^10.5.8",
     "postcss": "^8.5.25",
     "tailwindcss": "^4.3.3",
     "typescript": "^5",
-    "vite": "latest",
-    "vitest": "latest"
+    "vite": "latest"
   }
 }

@@ -8,7 +8,7 @@
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 
-export const getAppControllerGetHelloMockHandler = (
+export const getAppControllerGetHelloV1MockHandler = (
   overrideResponse?:
     | void
     | ((
@@ -17,7 +17,7 @@ export const getAppControllerGetHelloMockHandler = (
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
-    "*/",
+    "*/api/v1",
     async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
       if (typeof overrideResponse === "function") {
         await overrideResponse(info);
@@ -28,4 +28,4 @@ export const getAppControllerGetHelloMockHandler = (
     options,
   );
 };
-export const getAppMock = () => [getAppControllerGetHelloMockHandler()];
+export const getAppMock = () => [getAppControllerGetHelloV1MockHandler()];
