@@ -1,0 +1,9 @@
+// 특정 입양 신청 상세 조회 전용 페이지 (새 창/새 탭 대상)
+// 라이프스타일 설문, 유저 정보, 승인/반려 액션 바 포함
+export default function adoptionsPage() {
+  return (
+    <div>
+      <h1>Adoptions Page</h1>
+    </div>
+  );
+}

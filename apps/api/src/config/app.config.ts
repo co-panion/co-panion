@@ -6,16 +6,22 @@ import { registerAs } from '@nestjs/config';
  */
 export const appConfig = registerAs('app', () => {
   const isProd = process.env.NODE_ENV === 'production';
+
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost';
-  const frontendPort = process.env.FRONTEND_PORT || (isProd ? '' : '3000'); 
-  const corsOrigin = frontendPort ? `${frontendUrl}:${frontendPort}` : frontendUrl;
+  const frontendPort = process.env.FRONTEND_PORT || (isProd ? '' : '3000');
+  const frontendOrigin = frontendPort
+    ? `${frontendUrl}:${frontendPort}`
+    : frontendUrl;
+
+  const docsUrl = process.env.DOCS_URL || 'http://localhost';
+  const docsPort = process.env.DOCS_PORT || (isProd ? '' : '3030');
+  const docsOrigin = docsPort ? `${docsUrl}:${docsPort}` : docsUrl;
 
   return {
     isProd,
     env: process.env.NODE_ENV || 'development',
     port: parseInt(process.env.API_PORT || '3001', 10),
-    corsOrigin: corsOrigin,
+    corsOrigin: [frontendOrigin, docsOrigin],
     apiPrefix: process.env.API_PREFIX || 'api',
   };
-
 });

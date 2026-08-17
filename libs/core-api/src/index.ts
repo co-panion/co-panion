@@ -7,9 +7,9 @@ export * from "./interceptors/transform.interceptor";
 export * from "./constants/swagger-responses.constant";
 
 // 인증 및 인가
-//export * from "./auth/guards/jwt-auth.guard";
-//export * from "./decorators/current-user.decorator";
-//export * from "./decorators/roles.decorator";
+export * from "./guards/jwt-auth.guard";
+export * from "./decorators/current-user.decorator";
+export * from "./decorators/roles.decorator";
 
 // Database 어댑터
 export * from "./database";

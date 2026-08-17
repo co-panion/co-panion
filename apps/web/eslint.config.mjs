@@ -1,3 +1,6 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from "eslint-plugin-storybook";
+
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
@@ -5,6 +8,10 @@ import nextTs from "eslint-config-next/typescript";
 const webConfigs = [...nextVitals, ...nextTs].map((config) => ({
   ...config,
   files: ["apps/web/**/*.{js,jsx,ts,tsx}"],
+  rules: {
+    ...config.rules,
+    "@next/next/no-html-link-for-pages": ["error", "apps/web/src/app"],
+  },
 }));
 
 export default webConfigs;

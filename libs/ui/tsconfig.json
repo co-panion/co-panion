@@ -1,12 +1,16 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    //"outDir": "./dist"
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "target": "ES2022",
+    "noEmit": false,
+    "lib": ["es2022", "dom", "dom.iterable"]
   },
   "include": [
-    "src/**/*",
-    "tailwind.config.ts",
-    "tailwind.preset.ts"
+    "src/**/*"
   ],
   "exclude": ["node_modules", "dist"]
 }

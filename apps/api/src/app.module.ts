@@ -8,13 +8,12 @@ import { appConfig } from './config/app.config';
 @Module({
   imports: [
     ConfigModule.forRoot({
-    isGlobal: true,
-    load: [appConfig],
-    envFilePath: '.env',
+      isGlobal: true,
+      load: [appConfig],
+      envFilePath: '.env',
     }),
   ],
   controllers: [AppController],
   providers: [AppService],
-
 })
 export class AppModule {}
